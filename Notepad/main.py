@@ -1,28 +1,87 @@
-# ## Информация о проекте
-# Необходимо написать проект, содержащий функционал работы с заметками. Программа должна уметь создавать заметку, сохранять её, читать список заметок, редактировать заметку, удалять заметку.
-
-# ## Как сдавать проект
-# Для сдачи проекта необходимо создать отдельный общедоступный репозиторий (Github, gitlub, или Bitbucket).
-# Разработку вести в этом репозитории, использовать пул реквесты на изменения.
-# Программа должна запускаться и работать, ошибок при выполнении программы быть не должно.
-
-# ## Критерии оценки
-# Приложение должно запускаться без ошибок, должно уметь сохранять данные в файл,
-# уметь читать данные из файла, делать выборку по дате, выводить на экран выбранную запись, выводить на экран весь список записок, добавлять записку, редактировать ее и удалять.
-
-# Реализовать консольное приложение заметки, с сохранением, чтением, добавлением,
-# редактированием и удалением заметок.
-
-# Заметка должна содержать идентификатор, заголовок, тело заметки и дату/время создания или последнего изменения заметки.
-
-# Сохранение заметок необходимо сделать в формате json или csv формат
-# (разделение полей рекомендуется делать через точку с запятой).
-# Реализацию пользовательского интерфейса студент может делать как ему удобнее,
-# можно делать как параметры запуска программы (команда, данные),
-# можно делать как запрос команды с консоли и последующим вводом данных, как-то ещё, на усмотрение студента.
+import json
+import datetime
 
 
+def add_note():
+    title = input("Введите заголовок заметки: ")
+    msg = input("Введите тело заметки: ")
+    note_id = len(notes) + 1
+    date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    notes.append({"id": note_id, "title": title, "msg": msg, "date": date})
+    save_notes()
+    print("Заметка успешно сохранена")
 
 
+def read_notes():
+    filter_date = input("Введите дату для фильтрации (в формате ГГГГ-ММ-ДД): ")
+    if not notes:
+        print("Заметок нет")
+        return
+    if not filter_date:
+        for note in notes:
+            print(f"{note['id']}. {note['title']} ({note['date']})\n{note['msg']}\n")
+    else:
+        filtered_notes = [note for note in notes if note["date"].startswith(filter_date)]
+        if filtered_notes:
+            for note in filtered_notes:
+                print(f"{note['id']}. {note['title']} ({note['date']})\n{note['msg']}\n")
+        else:
+            print("Заметок с указанной датой нет")
 
 
+def edit_note():
+    note_id = int(input("Введите id заметки для редактирования: "))
+    for note in notes:
+        if note["id"] == note_id:
+            title = input(f"Введите новый заголовок заметки ({note['title']}): ")
+            msg = input(f"Введите новое тело заметки ({note['msg']}): ")
+            if title:
+                note["title"] = title
+            if msg:
+                note["msg"] = msg
+            note["date"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            save_notes()
+            print("Заметка успешно отредактирована")
+            return
+    print(f"Заметка с id {note_id} не найдена")
+
+
+def delete_note():
+    note_id = int(input("Введите id заметки для удаления: "))
+    for note in notes:
+        if note["id"] == note_id:
+            notes.remove(note)
+            save_notes()
+            print("Заметка успешно удалена")
+            return
+    print(f"Заметка с id {note_id} не найдена")
+
+
+def save_notes():
+    with open("notes.json", "w") as f:
+        json.dump(notes, f)
+
+
+def load_notes():
+    try:
+        with open("notes.json", "r") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.decoder.JSONDecodeError):
+        return []
+
+if __name__ == "__main__":
+    notes = load_notes()
+    while True:
+        command = input("Введите команду:\n1.Добавить\n2.Прочитать\n3.Редактировать\n4.Удалить\n5.Выход\n ")
+        if command == "1":
+            add_note()
+        elif command == "2":
+            read_notes()
+        elif command == "3":
+            edit_note()
+        elif command == "4":
+            delete_note()
+        elif command == "5":
+            break
+        else:
+            print("Неверная команда")
